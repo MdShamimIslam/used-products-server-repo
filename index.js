@@ -32,6 +32,11 @@ async function dbConncet () {
     console.log(result);
     res.send(result);
   })
+  app.get("/cloths", async(req, res) => {
+    const query = {};
+    const result = await clothCollection.find(query).toArray();
+    res.send(result)
+  })
     
   } catch (error) {
     console.log("line 32", error);
