@@ -28,27 +28,13 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
  
 async function dbConncet () {
   try {
-  //    app.post('/category', async(req, res) => {
-  //   const cloth = req.body;
-  //   const result = await productsCollection.insertOne(cloth);
-  //   console.log(result);
-  //   res.send(result);
-  // })
-  app.get("/category", async(req, res) => {
+ app.get("/category", async(req, res) => {
     const query = {};
     const result = await categoryCollection.find(query).toArray();
     res.send(result)
   })
-  
-// app.get("/category", async (req, res) => {
-//       const query = {};
-//       const result = await productsCollection
-//         .find(query).project({ category_name: 1, category_img: 1 }).toArray();
-//         console.log(result);
-//       res.send(result);
-//     });
 
-    app.get("/category/:id", async (req, res) => {
+  app.get("/category/:id", async (req, res) => {
       const id = req.params.id;
       const query = { category_id: id };
       const result = await productsCollection.find(query).toArray();
@@ -56,6 +42,24 @@ async function dbConncet () {
       res.send(result);
 
     })
+
+     app.post('/booking', async(req, res) => {
+    const product = req.body;
+    const result = await bookingCollection.insertOne(product);
+    console.log(result);
+    res.send(result);
+  })
+
+    app.get("/booking", async(req, res) => {
+
+    let query = {};
+    if(req.query.email) {
+      query ={ email : req?.query?.email}
+      
+    }
+    const result = await bookingCollection.find(query).toArray();
+    res.send(result);
+  })
  
 
 
