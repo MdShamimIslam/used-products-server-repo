@@ -21,22 +21,46 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@${process.env.DB_NAME}.9arzfvs.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
  
-  const clothCollection = client.db("recycleCloth").collection("cloths");
+  const categoryCollection = client.db("recycleCloth").collection("categories");
+  const productsCollection = client.db("recycleCloth").collection("products");
+  const bookingCollection = client.db("recycleCloth").collection("bookings");
   // perform actions on the collection object
  
 async function dbConncet () {
   try {
-     app.post('/cloths', async(req, res) => {
-    const cloth = req.body;
-    const result = await clothCollection.insertOne(cloth);
-    console.log(result);
-    res.send(result);
-  })
-  app.get("/cloths", async(req, res) => {
+  //    app.post('/category', async(req, res) => {
+  //   const cloth = req.body;
+  //   const result = await productsCollection.insertOne(cloth);
+  //   console.log(result);
+  //   res.send(result);
+  // })
+  app.get("/category", async(req, res) => {
     const query = {};
-    const result = await clothCollection.find(query).toArray();
+    const result = await categoryCollection.find(query).toArray();
     res.send(result)
   })
+  
+// app.get("/category", async (req, res) => {
+//       const query = {};
+//       const result = await productsCollection
+//         .find(query).project({ category_name: 1, category_img: 1 }).toArray();
+//         console.log(result);
+//       res.send(result);
+//     });
+
+    app.get("/category/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { category_id: id };
+      const result = await productsCollection.find(query).toArray();
+      console.log(result);
+      res.send(result);
+
+    })
+ 
+
+
+
+
     
   } catch (error) {
     console.log("line 32", error);
