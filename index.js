@@ -24,10 +24,63 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
   const categoryCollection = client.db("recycleCloth").collection("categories");
   const productsCollection = client.db("recycleCloth").collection("products");
   const bookingCollection = client.db("recycleCloth").collection("bookings");
+  const userCollection = client.db("recycleCloth").collection("users");
   // perform actions on the collection object
+  function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+  console.log(authHeader);
+  if (!authHeader) {
+    return res.status(401).send({ message: 'UnAuthorized access' });
+  } 
+
+else {
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, process.env.JWT_TOKEN, function (err, decoded) {
+    
+  if (err) {
+      return res.status(403).send({ message: 'Forbidden access' })
+    }
+  else{
+     req.decoded = decoded;
+     next();
+   }      
+  
+  });
+}
+
+}
+
+
  
 async function dbConncet () {
   try {
+       
+  app.get("/jwt", async(req, res) => {
+  console.log("jwt email", req.query.email);
+  const email = req.query.email;
+  console.log(req.query.email);
+  const query = {email : email};
+  const user = await userCollection.findOne(query);
+  console.log("jwt user", user);
+  if(user) {
+    const token = jwt.sign({email},process.env.JWT_TOKEN , {expiresIn : '1d'})
+    console.log(token);
+    return  res.send({"accessToken":  token});
+  }
+
+  // console.log(result);
+  res.status(403).send({accessToken : " "});
+})
+
+  app.post("/user", async(req,res) =>{
+    const user = req.body;
+    console.log("post user", user);
+    const result = await userCollection.insertOne(user);
+    res.send(result)
+  })
+
+
+
  app.get("/category", async(req, res) => {
     const query = {};
     const result = await categoryCollection.find(query).toArray();
@@ -50,7 +103,7 @@ async function dbConncet () {
     res.send(result);
   })
 
-    app.get("/booking", async(req, res) => {
+    app.get("/booking",verifyJWT, async(req, res) => {
 
     let query = {};
     if(req.query.email) {
@@ -61,6 +114,13 @@ async function dbConncet () {
     res.send(result);
   })
  
+  app.post("/product", async(req, res) => {
+    const product = req.body;
+    const result = await productsCollection.insertOne(product);
+    console.log(result);
+    res.send(result);
+
+  })
 
 
 
