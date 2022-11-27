@@ -71,6 +71,73 @@ async function dbConncet () {
   // console.log(result);
   res.status(403).send({accessToken : " "});
 })
+// verifyyyyy User
+
+    const verifyAdmin = async (req, res, next) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            console.log("verify admin",decodedEmail, query );
+            const user = await userCollection.findOne(query);
+            
+            if (user?.role !== 'Admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next();
+  }
+
+    app.get('/user/admin/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email }
+      const user = await userCollection.findOne(query);
+      // console.log("jwt user", user);
+      res.send({ isAdmin: user?.role === 'Admin' });
+  })
+
+
+  //verify Seller
+      const verifySeller = async (req, res, next) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await userCollection.findOne(query);
+            console.log("check seller user", user);
+            if (user?.role !== 'Buyer') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next();
+  }
+      app.get('/user/seller/:email', async (req, res) => {
+      const email = req.params.email;
+      // console.log("verify seller email get", email);
+      const query = { email }
+      const user = await userCollection.findOne(query);
+      // console.log("verify seller user get", user);
+      //   console.log("verify seller user get", user?.role);
+
+      res.send({ isSeller: user?.role === 'Seller' });
+  })
+
+  //verufy Buyer
+
+        const verifyBuyer = async (req, res, next) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await userCollection.findOne(query);
+
+            if (user?.role !== 'Seller') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next();
+  }
+    app.get('/user/buyer/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { email }
+      const user = await userCollection.findOne(query);
+      res.send({ isAdmin: user?.role === 'Admin' });
+  })
+
+
+
+
 
   app.post("/user", async(req,res) =>{
     const user = req.body;
@@ -78,6 +145,16 @@ async function dbConncet () {
     const result = await userCollection.insertOne(user);
     res.send(result)
   })
+  
+    app.get("/user",verifyAdmin, async(req, res) => {
+    const accountType  = req.query.role;
+    const query = {role : accountType}
+    const result = await userCollection.find(query).toArray();
+    console.log("toi to asubu", accountType);
+    console.log("seller money",result);
+    res.send(result);
+  })
+
 
 
 
@@ -114,9 +191,18 @@ async function dbConncet () {
     res.send(result);
   })
  
-  app.post("/product", async(req, res) => {
+  app.post("/product",verifySeller, async(req, res) => {
     const product = req.body;
     const result = await productsCollection.insertOne(product);
+    console.log(result);
+    res.send(result);
+
+  })
+  app.get("/product", async(req, res) => {
+    const email = req.query.email;
+    const query = {seller_email : req.query.email}
+    console.log("product", email);
+    const result = await productsCollection.find(query).toArray();
     console.log(result);
     res.send(result);
 
