@@ -73,17 +73,40 @@ async function dbConncet () {
 })
 // verifyyyyy User
 
-    const verifyAdmin = async (req, res, next) => {
+  //   const verifyAdmin = async (req, res, next) => {
+  //           const decodedEmail = req.decoded.email;
+  //           const query = { email: decodedEmail };
+  //           console.log("verify admin",decodedEmail, query );
+  //           const user = await userCollection.findOne(query);
+            
+  //           if (user?.role !== 'Admin') {
+  //               return res.status(403).send({ message: 'forbidden access' })
+  //           }
+  //           next();
+  // }
+    app.put('/user/admin/:id', verifyJWT, async (req, res) => {
             const decodedEmail = req.decoded.email;
             const query = { email: decodedEmail };
-            console.log("verify admin",decodedEmail, query );
             const user = await userCollection.findOne(query);
-            
+
             if (user?.role !== 'Admin') {
                 return res.status(403).send({ message: 'forbidden access' })
             }
-            next();
-  }
+
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    role: 'Admin'
+                }
+            }
+            const result = await userCollection.updateOne(filter, updatedDoc, options);
+            res.send(result)
+        });
+
+    
+
 
     app.get('/user/admin/:email', async (req, res) => {
       const email = req.params.email;
@@ -93,18 +116,6 @@ async function dbConncet () {
       res.send({ isAdmin: user?.role === 'Admin' });
   })
 
-
-  //verify Seller
-      const verifySeller = async (req, res, next) => {
-            const decodedEmail = req.decoded.email;
-            const query = { email: decodedEmail };
-            const user = await userCollection.findOne(query);
-            console.log("check seller user", user);
-            if (user?.role !== 'Buyer') {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
-            next();
-  }
       app.get('/user/seller/:email', async (req, res) => {
       const email = req.params.email;
       // console.log("verify seller email get", email);
@@ -116,27 +127,37 @@ async function dbConncet () {
       res.send({ isSeller: user?.role === 'Seller' });
   })
 
+  // //verify Seller
+  //     const verifySeller = async (req, res, next) => {
+  //           const decodedEmail = req.decoded.email;
+  //           const query = { email: decodedEmail };
+  //           const user = await userCollection.findOne(query);
+  //           console.log("check seller user", user);
+  //           if (user?.role !== 'Buyer') {
+  //               return res.status(403).send({ message: 'forbidden access' })
+  //           }
+  //           next();
+  // }
+
+
   //verufy Buyer
 
-        const verifyBuyer = async (req, res, next) => {
-            const decodedEmail = req.decoded.email;
-            const query = { email: decodedEmail };
-            const user = await userCollection.findOne(query);
+  //       const verifyBuyer = async (req, res, next) => {
+  //           const decodedEmail = req.decoded.email;
+  //           const query = { email: decodedEmail };
+  //           const user = await userCollection.findOne(query);
 
-            if (user?.role !== 'Seller') {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
-            next();
-  }
+  //           if (user?.role !== 'Seller') {
+  //               return res.status(403).send({ message: 'forbidden access' })
+  //           }
+  //           next();
+  // }
     app.get('/user/buyer/:email', async (req, res) => {
       const email = req.params.email;
       const query = { email }
       const user = await userCollection.findOne(query);
       res.send({ isAdmin: user?.role === 'Admin' });
   })
-
-
-
 
 
   app.post("/user", async(req,res) =>{
@@ -146,15 +167,22 @@ async function dbConncet () {
     res.send(result)
   })
   
-    app.get("/user",verifyAdmin, async(req, res) => {
+    app.get("/user", async(req, res) => {
     const accountType  = req.query.role;
+    // console.log("line 151", accountType);
+    console.log("line 155 role user", accountType);
+
     const query = {role : accountType}
     const result = await userCollection.find(query).toArray();
-    console.log("toi to asubu", accountType);
     console.log("seller money",result);
     res.send(result);
   })
-
+app.delete("/user/:id", async(req,res) => {
+   const id = req.params.id;
+   const query = {_id : ObjectId(id)};
+    const result = await userCollection.deleteOne(query);
+    res.send(result);
+})
 
 
 
@@ -171,6 +199,7 @@ async function dbConncet () {
       console.log(result);
       res.send(result);
 
+      
     })
 
      app.post('/booking', async(req, res) => {
@@ -180,7 +209,10 @@ async function dbConncet () {
     res.send(result);
   })
 
-    app.get("/booking",verifyJWT, async(req, res) => {
+
+
+  
+  app.get("/booking",verifyJWT, async(req, res) => {
 
     let query = {};
     if(req.query.email) {
@@ -191,7 +223,21 @@ async function dbConncet () {
     res.send(result);
   })
  
-  app.post("/product",verifySeller, async(req, res) => {
+  app.delete("/booking/:id", verifyJWT, async(req, res) => {
+    const id = req.params.id;
+    const query = {_id : ObjectId(id)};
+    const result = await bookingCollection.deleteOne(query);
+    console.log("booking delete",result);
+    res.send(result);
+  })
+   app.get("/booking/:id", async(req, res) => {
+    const id = req.params.id;
+    const query = {_id : ObjectId(id)};
+    const booking = await productsCollection.findOne(query);
+    res.send(booking)
+    console.log("book 1", booking);
+   })
+  app.post("/product", async(req, res) => {
     const product = req.body;
     const result = await productsCollection.insertOne(product);
     console.log(result);
@@ -207,6 +253,7 @@ async function dbConncet () {
     res.send(result);
 
   })
+
 
 
 
