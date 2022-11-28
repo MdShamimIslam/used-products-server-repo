@@ -1,12 +1,12 @@
 const express = require('express')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
- const stripe = require("stripe")(process.env.STRIPE_TOKEN);
+require('dotenv').config()
 const jwt = require('jsonwebtoken');
+const stripe = require("stripe")(process.env.STRIPE_TOKEN);
 const app = express();
 const cors = require('cors');
 //recyclecloth400310
 //recycle-cloth
-require('dotenv').config()
 const port = process.env.PORT || 5000;
 
 //middleware
@@ -15,9 +15,9 @@ app.use(express.json());
 
 
 //mongodb setup
-//  console.log(process.env.DB_NAME);
-//  console.log(process.env.DB_PASSWORD);
-// console.log(process.env.STRIPE_TOKEN);
+ console.log(process.env.DB_NAME);
+ console.log(process.env.DB_PASSWORD);
+console.log(process.env.STRIPE_TOKEN);
 // const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@${process.env.DB_NAME}.9arzfvs.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -232,7 +232,7 @@ app.delete("/user/:id", async(req,res) => {
     })
 
   app.get("/advertise", async(req, res) => {
-      const query = {advertise : true};
+      const query = {advertise : true, paid: false};
       const result = await productsCollection.find(query).toArray();
       res.send(result);
     })
