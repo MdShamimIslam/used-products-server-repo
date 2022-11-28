@@ -1,5 +1,6 @@
 const express = require('express')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+ const stripe = require("stripe")('sk_test_51M6XMyFP01giCZcaAwEARihtW14CalDCeRtXxuwXr09zNQeUsRSWAJeeU4z4sOk6Hhu5K5HwVNyNuWl1hOCauUmo00WaBk1mBz');
 const jwt = require('jsonwebtoken');
 const app = express();
 const cors = require('cors');
@@ -25,13 +26,18 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
   const productsCollection = client.db("recycleCloth").collection("products");
   const bookingCollection = client.db("recycleCloth").collection("bookings");
   const userCollection = client.db("recycleCloth").collection("users");
-  // perform actions on the collection object
+const paymentsCollection = client.db("recycleCloth").collection("payments");
+
+  // perform actions on the collection object[[[]]]
+ 
   function verifyJWT(req, res, next) {
   const authHeader = req.headers.authorization;
   console.log(authHeader);
   if (!authHeader) {
     return res.status(401).send({ message: 'UnAuthorized access' });
   } 
+
+
 
 else {
   const token = authHeader.split(' ')[1];
@@ -51,10 +57,33 @@ else {
 }
 
 
+  const verifyAdmin = async (req, res, next) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await userCollection.findOne(query);
+
+            if (user?.role !== 'Admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next();
+        }
+
+  const verifySeller = async (req, res, next) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await userCollection.findOne(query);
+
+            if (user?.role !== 'Seller') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next();
+        }
  
+
+
 async function dbConncet () {
   try {
-       
+
   app.get("/jwt", async(req, res) => {
   console.log("jwt email", req.query.email);
   const email = req.query.email;
@@ -167,7 +196,7 @@ async function dbConncet () {
     res.send(result)
   })
   
-    app.get("/user", async(req, res) => {
+    app.get("/user",verifyJWT,verifyAdmin, async(req, res) => {
     const accountType  = req.query.role;
     // console.log("line 151", accountType);
     console.log("line 155 role user", accountType);
@@ -237,7 +266,7 @@ app.delete("/user/:id", async(req,res) => {
     res.send(booking)
     console.log("book 1", booking);
    })
-  app.post("/product", async(req, res) => {
+  app.post("/product",verifyJWT, verifySeller, async(req, res) => {
     const product = req.body;
     const result = await productsCollection.insertOne(product);
     console.log(result);
@@ -255,6 +284,50 @@ app.delete("/user/:id", async(req,res) => {
   })
 
 
+
+app.post("/create-payment-intent", async (req, res) => {
+  const  booking = req.body;
+  console.log("Booking", booking);
+  const price = booking?.resale_price;
+  const amount = price * 100;
+
+
+  // Create a PaymentIntent with the order amount and currency
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: amount,
+    currency: "usd",
+      "payment_method_types": [
+    "card"
+  ],
+  });
+
+  res.send({
+    clientSecret: paymentIntent.client_secret,
+  });
+});
+
+  app.post('/payments', async (req, res) =>{
+    const payment = req.body;
+    console.log("payment", payment);
+    const result = await paymentsCollection.insertOne(payment);
+    const id = payment.bookingId;
+
+    const bookingFilter =  {product_id : id};
+    const bookedfind = await bookingCollection.findOne(bookingFilter);
+    console.log("bookedfind", bookedfind); 
+    const filter = {_id: ObjectId(id)}
+    const updatedDoc = {
+        $set: {
+            paid: true,
+            transactionId: payment.transactionId
+        }
+    }
+    const updatedResult = await productsCollection.updateOne(filter, updatedDoc);
+    const updatedBooked = await bookingCollection.updateOne(bookingFilter, updatedDoc);
+    console.log("updatebooked", updatedBooked );
+    console.log(updatedResult);
+    res.send(result);
+})
 
 
 
