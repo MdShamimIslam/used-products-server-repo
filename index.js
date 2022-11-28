@@ -1,6 +1,6 @@
 const express = require('express')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
- const stripe = require("stripe")('sk_test_51M6XMyFP01giCZcaAwEARihtW14CalDCeRtXxuwXr09zNQeUsRSWAJeeU4z4sOk6Hhu5K5HwVNyNuWl1hOCauUmo00WaBk1mBz');
+ const stripe = require("stripe")(process.env.STRIPE_TOKEN);
 const jwt = require('jsonwebtoken');
 const app = express();
 const cors = require('cors');
@@ -15,9 +15,9 @@ app.use(express.json());
 
 
 //mongodb setup
- console.log(process.env.DB_NAME);
- console.log(process.env.DB_PASSWORD);
-
+//  console.log(process.env.DB_NAME);
+//  console.log(process.env.DB_PASSWORD);
+// console.log(process.env.STRIPE_TOKEN);
 // const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@${process.env.DB_NAME}.9arzfvs.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
@@ -282,6 +282,28 @@ app.delete("/user/:id", async(req,res) => {
     res.send(result);
 
   })
+      app.put('/product/:id', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await userCollection.findOne(query);
+
+            if (user?.role !== 'Seller') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    advertise: true
+                }
+            }
+            const result = await productsCollection.updateOne(filter, updatedDoc, options);
+            console.log("advertise update", result);
+            res.send(result)
+        });
+
 
 
 
