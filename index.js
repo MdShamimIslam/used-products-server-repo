@@ -282,6 +282,12 @@ app.delete("/user/:id", async(req,res) => {
     res.send(result);
 
   })
+  app.delete("/product/:id", async(req, res) => {
+     const id = req.params.id;
+    const filter = { _id: ObjectId(id) }
+    const result = await productsCollection.deleteOne(filter);
+    res.send(result);
+  })
       app.put('/product/:id', verifyJWT, async (req, res) => {
             const decodedEmail = req.decoded.email;
             const query = { email: decodedEmail };
