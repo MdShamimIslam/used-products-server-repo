@@ -134,7 +134,32 @@ async function dbConncet () {
             res.send(result)
         });
 
-    
+
+
+     app.put('/user/verify/:email', verifyJWT, async (req, res) => {
+             const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await userCollection.findOne(query);
+
+            if (user?.role !== 'Admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
+            const email = req.params.email;
+            const filter = { seller_email: email }
+            const userFilter = {email}
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    verify: true,
+                }
+            }
+            const updateUser = await userCollection.updateOne(filter, userFilter, options)
+            const result = await productsCollection.updateOne(filter, updatedDoc, options);
+            res.send(updateUser)
+            res.send(result)
+        });
+
 
 
     app.get('/user/admin/:email', async (req, res) => {
