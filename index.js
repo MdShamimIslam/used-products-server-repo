@@ -313,13 +313,21 @@ app.delete("/user/:id", async(req,res) => {
     res.send(result);
 
   })
+  app.get("/product/report", async(req, res) => {
+    
+    const query = {report : true}
+    const result = await productsCollection.find(query).toArray();
+    console.log(result);
+    res.send(result);
+
+  })
   app.delete("/product/:id", async(req, res) => {
      const id = req.params.id;
     const filter = { _id: ObjectId(id) }
     const result = await productsCollection.deleteOne(filter);
     res.send(result);
   })
-      app.put('/product/:id', verifyJWT, async (req, res) => {
+  app.put('/product/:id', verifyJWT, async (req, res) => {
             const decodedEmail = req.decoded.email;
             const query = { email: decodedEmail };
             const user = await userCollection.findOne(query);
@@ -340,8 +348,21 @@ app.delete("/user/:id", async(req,res) => {
             console.log("advertise update", result);
             res.send(result)
         });
+  app.put('/product/report/:id',  async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    report: true
+                }
+            }
+            const result = await productsCollection.updateOne(filter, updatedDoc, options);
+            console.log("advertise update", result);
+            res.send(result)
+        });
 
-
+ 
 
 
 app.post("/create-payment-intent", async (req, res) => {
