@@ -231,6 +231,12 @@ app.delete("/user/:id", async(req,res) => {
       
     })
 
+  app.get("/advertise", async(req, res) => {
+      const query = {advertise : true};
+      const result = await productsCollection.find(query).toArray();
+      res.send(result);
+    })
+
      app.post('/booking', async(req, res) => {
     const product = req.body;
     const result = await bookingCollection.insertOne(product);
