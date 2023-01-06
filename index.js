@@ -5,8 +5,7 @@ const jwt = require('jsonwebtoken');
 const stripe = require("stripe")(process.env.STRIPE_TOKEN);
 const app = express();
 const cors = require('cors');
-//recyclecloth400310
-//recycle-cloth
+
 const port = process.env.PORT || 5000;
 
 //middleware
@@ -100,19 +99,7 @@ async function dbConncet () {
   // console.log(result);
   res.status(403).send({accessToken : " "});
 })
-// verifyyyyy User
 
-  //   const verifyAdmin = async (req, res, next) => {
-  //           const decodedEmail = req.decoded.email;
-  //           const query = { email: decodedEmail };
-  //           console.log("verify admin",decodedEmail, query );
-  //           const user = await userCollection.findOne(query);
-            
-  //           if (user?.role !== 'Admin') {
-  //               return res.status(403).send({ message: 'forbidden access' })
-  //           }
-  //           next();
-  // }
     app.put('/user/admin/:id', verifyJWT, async (req, res) => {
             const decodedEmail = req.decoded.email;
             const query = { email: decodedEmail };
@@ -181,31 +168,7 @@ async function dbConncet () {
       res.send({ isSeller: user?.role === 'Seller' });
   })
 
-  // //verify Seller
-  //     const verifySeller = async (req, res, next) => {
-  //           const decodedEmail = req.decoded.email;
-  //           const query = { email: decodedEmail };
-  //           const user = await userCollection.findOne(query);
-  //           console.log("check seller user", user);
-  //           if (user?.role !== 'Buyer') {
-  //               return res.status(403).send({ message: 'forbidden access' })
-  //           }
-  //           next();
-  // }
-
-
-  //verufy Buyer
-
-  //       const verifyBuyer = async (req, res, next) => {
-  //           const decodedEmail = req.decoded.email;
-  //           const query = { email: decodedEmail };
-  //           const user = await userCollection.findOne(query);
-
-  //           if (user?.role !== 'Seller') {
-  //               return res.status(403).send({ message: 'forbidden access' })
-  //           }
-  //           next();
-  // }
+  
     app.get('/user/buyer/:email', async (req, res) => {
       const email = req.params.email;
       const query = { email }
@@ -423,8 +386,8 @@ app.post("/create-payment-intent", async (req, res) => {
 
 
 app.get('/', (req, res) => {
-  res.send('Recycle cloth Server is runnning')
+  res.send('Recycle cloth Server is running')
 })
 app.listen(port, () => {
-  console.log("Recyle Cloth Server is running on " , port);
+  console.log("Recycle Cloth Server is running on " , port);
 })
